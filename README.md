@@ -179,34 +179,6 @@ Cache directories are created automatically if they don't exist. Example directo
     MSFT_historical.json
 ```
 
-### Add StockMarketAlgorithm to your project
-
-First, you need to add the dependency to your project. The library is available on Maven Central.
-
-<details>
-    <summary>Maven</summary>
-
-```xml
-<dependencies>
-    <dependency>
-        <groupId>net.swofty</groupId>
-        <artifactId>stockmarketalgorithm</artifactId>
-        <version>1.0.0</version>
-    </dependency>
-</dependencies>
-```
-</details>
-
-<details>
-    <summary>Gradle</summary>
-
-```gradle
-dependencies {
-    implementation 'net.swofty:stockmarketalgorithm:1.0.0'
-}
-```
-</details>
-
 ## Basic Usage
 
 Here's a complete example of creating and running a basic buy-and-hold algorithm:
