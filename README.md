@@ -33,7 +33,7 @@ Add the dependency to your project from Maven Central:
 <dependencies>
     <dependency>
         <groupId>net.swofty</groupId>
-        <artifactId>stockmarketalgorithm</artifactId>
+        <artifactId>stockmarkettester</artifactId>
         <version>{VERSION}</version>
     </dependency>
 </dependencies>
@@ -45,7 +45,7 @@ Add the dependency to your project from Maven Central:
 
 ```gradle
 dependencies {
-    implementation 'net.swofty:stockmarketalgorithm:{VERSION}' // Requires Maven Central
+    implementation 'net.swofty:stockmarkettester:{VERSION}' // Requires Maven Central
 }
 ```
 </details>
