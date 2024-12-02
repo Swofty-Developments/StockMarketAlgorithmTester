@@ -1,7 +1,7 @@
 # Stock Market Algorithm Tester
-![badge](https://img.shields.io/maven-central/v/net.swofty/StockMarketAlgorithmTester)
-![badge](https://img.shields.io/github/last-commit/Swofty/StockMarketAlgorithmTester)
-[![badge](https://img.shields.io/github/license/Swofty/StockMarketAlgorithmTester)](https://github.com/Swofty/StockMarketAlgorithmTester/blob/master/LICENSE)
+![badge](https://img.shields.io/maven-central/v/net.swofty/stockmarkettester)
+![badge](https://img.shields.io/github/last-commit/Swoft-Developmentsy/StockMarketAlgorithmTester)
+[![badge](https://img.shields.io/github/license/Swofty-Developments/StockMarketAlgorithmTester)](https://github.com/Swofty-Developments/StockMarketAlgorithmTester/blob/master/LICENSE)
 
 A powerful, extensible Java library for creating and backtesting stock market trading algorithms. Supports advanced trading strategies including options, short selling, and automated position management.
 
