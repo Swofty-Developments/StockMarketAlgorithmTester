@@ -157,12 +157,10 @@ The library implements a multi-level caching system to minimize API calls and im
 1. **Alpha Vantage Cache**
     - Caches additional market data like earnings, sentiment, and financial metrics
     - Default 24-hour cache duration
-    - Stored in `vantageCachePath` directory
     - Automatically manages API rate limits
 
 2. **Market Data Cache**
     - Caches historical price data for backtesting
-    - Stored in `dataProviderCachePath` directory
     - Persists between runs to avoid re-downloading data
     - Automatically refreshed when data becomes stale
 
