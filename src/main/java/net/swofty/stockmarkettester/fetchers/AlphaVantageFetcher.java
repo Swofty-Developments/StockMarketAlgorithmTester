@@ -73,6 +73,7 @@ public class AlphaVantageFetcher {
             Path earningsPath = cacheDirectory.resolve("earnings_cache.json");
             Path metricsPath = cacheDirectory.resolve("metrics_cache.json");
             Path incomePath = cacheDirectory.resolve("income_cache.json");
+            Path sentimentPath = cacheDirectory.resolve("sentiment_cache.json");
 
             if (Files.exists(earningsPath)) {
                 JsonNode node = mapper.readTree(earningsPath.toFile());
@@ -101,6 +102,16 @@ public class AlphaVantageFetcher {
                     incomeCache.put(entry.getKey(), cacheEntry);
                 });
             }
+
+            if (Files.exists(sentimentPath)) {
+                JsonNode node = mapper.readTree(sentimentPath.toFile());
+                node.fields().forEachRemaining(entry -> {
+                    CacheEntry<List<NewsSentiment>> cacheEntry = mapper.convertValue(entry.getValue(),
+                            mapper.getTypeFactory().constructParametricType(CacheEntry.class,
+                                    mapper.getTypeFactory().constructCollectionType(List.class, NewsSentiment.class)));
+                    sentimentCache.put(entry.getKey(), cacheEntry);
+                });
+            }
         } catch (IOException e) {
             // Log error but continue - worst case we start with empty cache
             System.err.println("Failed to load cache from disk: " + e.getMessage());
@@ -112,6 +123,7 @@ public class AlphaVantageFetcher {
             mapper.writeValue(cacheDirectory.resolve("earnings_cache.json").toFile(), earningsCache);
             mapper.writeValue(cacheDirectory.resolve("metrics_cache.json").toFile(), metricsCache);
             mapper.writeValue(cacheDirectory.resolve("income_cache.json").toFile(), incomeCache);
+            mapper.writeValue(cacheDirectory.resolve("sentiment_cache.json").toFile(), sentimentCache);
         } catch (IOException e) {
             System.err.println("Failed to save cache to disk: " + e.getMessage());
         }
