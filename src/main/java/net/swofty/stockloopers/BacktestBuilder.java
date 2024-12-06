@@ -19,9 +19,15 @@ public class BacktestBuilder {
     private Duration interval;
     private MarketConfig marketConfig = MarketConfig.NYSE; // Default to NYSE
     private boolean runOnMarketClosed = false;
+    private boolean automaticallySellOnFinish = false;
 
     public BacktestBuilder withRunOnMarketClosed(boolean runOnMarketClosed) {
         this.runOnMarketClosed = runOnMarketClosed;
+        return this;
+    }
+
+    public BacktestBuilder withAutomaticallySellOnFinish(boolean automaticallySellOnFinish) {
+        this.automaticallySellOnFinish = automaticallySellOnFinish;
         return this;
     }
 
@@ -77,7 +83,7 @@ public class BacktestBuilder {
             System.out.println("Starting stockloopers...");
         }
 
-        StockBackTester backtester = new StockBackTester(provider, tickers, previousDays, interval, marketConfig, runOnMarketClosed, shouldPrint);
+        StockBackTester backtester = new StockBackTester(provider, tickers, previousDays, interval, marketConfig, runOnMarketClosed, shouldPrint, automaticallySellOnFinish);
         algorithms.forEach(backtester::addAlgorithm);
         return backtester.runBacktest(shouldPrint);
     }

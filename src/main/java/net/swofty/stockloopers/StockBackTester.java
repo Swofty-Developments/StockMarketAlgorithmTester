@@ -3,9 +3,11 @@ package net.swofty.stockloopers;
 import net.swofty.AlgorithmStatistics;
 import net.swofty.MarketConfig;
 import net.swofty.Portfolio;
+import net.swofty.Position;
 import net.swofty.data.HistoricalMarketService;
 import net.swofty.orders.MarketDataPoint;
 import net.swofty.orders.Order;
+import net.swofty.orders.OrderType;
 import net.swofty.user.Algorithm;
 
 import javax.sound.sampled.Port;
@@ -30,13 +32,15 @@ public class StockBackTester {
     private final MarketConfig marketConfig;
     private final boolean runOnMarketClosed;
     private final boolean shouldPrint;
+    private final boolean automaticallySellOnFinish;
 
     public StockBackTester(HistoricalMarketService marketService, Set<String> tickers,
-                           int previousDays, Duration interval, MarketConfig marketConfig, boolean runOnMarketClosed, boolean shouldPrint) {
+                           int previousDays, Duration interval, MarketConfig marketConfig, boolean runOnMarketClosed, boolean shouldPrint, boolean automaticallySellOnFinish) {
         this.marketService = marketService;
         this.marketConfig = marketConfig;
         this.runOnMarketClosed = runOnMarketClosed;
         this.shouldPrint = shouldPrint;
+        this.automaticallySellOnFinish = automaticallySellOnFinish;
         this.algorithms = ConcurrentHashMap.newKeySet();
         this.algorithmPortfolios = new ConcurrentHashMap<>();
         this.algorithmStatistics = new ConcurrentHashMap<>();
@@ -98,6 +102,25 @@ public class StockBackTester {
                 lastProcessed = timestamp;
                 processedPoints++;
 
+                if (processedPoints == totalPoints && automaticallySellOnFinish) {
+                    // Automatically sell all positions at the end of the backtest
+                    algorithms.forEach(algo -> {
+                        String algoId = algo.getAlgorithmId();
+                        Portfolio portfolio = algorithmPortfolios.get(algoId);
+                        AlgorithmStatistics statistics = algorithmStatistics.get(algoId);
+
+                        if (shouldPrint) {
+                            System.out.println("\nAutomatically selling all positions for algorithm: " + algoId);
+                        }
+
+                        sellAllPositions(portfolio, currentData, statistics, timestamp);
+
+                        // Update final statistics after selloff
+                        double finalPortfolioValue = portfolio.getTotalValue(currentData);
+                        statistics.updateStatistics(finalPortfolioValue, RISK_FREE_RATE / 252);
+                    });
+                }
+
                 if (shouldPrint) {
                     System.out.println("Processing timepoint: " + timestamp.atZone(marketConfig.zoneId));
                     printProgress(processedPoints, totalPoints, timestamp);
@@ -120,6 +143,55 @@ public class StockBackTester {
                 timeline.lastKey(),
                 algorithmPortfolios
         );
+    }
+
+    private void sellAllPositions(Portfolio portfolio, Map<String, MarketDataPoint> currentData,
+                                  AlgorithmStatistics statistics, LocalDateTime timestamp) {
+        double portfolioValueBefore = portfolio.getTotalValue(currentData);
+
+        // Sell all long positions
+        portfolio.getAllPositions().forEach((ticker, position) -> {
+            MarketDataPoint currentPrice = currentData.get(ticker);
+            if (currentPrice != null && position.quantity() > 0) {
+                try {
+                    // Record the sell trade first
+                    statistics.recordTrade(
+                            ticker,
+                            OrderType.SELL,
+                            position.quantity(),
+                            currentPrice.close(),
+                            portfolioValueBefore,
+                            timestamp
+                    );
+                    // Execute the sell
+                    portfolio.sellStock(ticker, position.quantity(), currentPrice.close());
+                } catch (Exception e) {
+                    System.err.printf("Failed to sell position for %s: %s%n", ticker, e.getMessage());
+                }
+            }
+        });
+
+        // Cover all short positions
+        portfolio.getAllShortPositions().forEach((ticker, shortPosition) -> {
+            MarketDataPoint currentPrice = currentData.get(ticker);
+            if (currentPrice != null && shortPosition.quantity() > 0) {
+                try {
+                    // Record the cover trade first
+                    statistics.recordTrade(
+                            ticker,
+                            OrderType.COVER,
+                            shortPosition.quantity(),
+                            currentPrice.close(),
+                            portfolioValueBefore,
+                            timestamp
+                    );
+                    // Execute the cover
+                    portfolio.coverShort(ticker, shortPosition.quantity(), currentPrice.close());
+                } catch (Exception e) {
+                    System.err.printf("Failed to cover short position for %s: %s%n", ticker, e.getMessage());
+                }
+            }
+        });
     }
 
     private void printProgress(int current, int total, LocalDateTime timestamp) {
@@ -246,9 +318,32 @@ public class StockBackTester {
 
             LocalDateTime timestamp = currentData.values().iterator().next().timestamp();
 
+            // Capture portfolio state before update
+            Map<String, Position> positionsBefore = new HashMap<>();
+            Map<String, net.swofty.orders.Short> shortsBefore = new HashMap<>();
+
+            // Deep copy current positions
+            portfolio.getAllPositions().forEach((ticker, pos) ->
+                    positionsBefore.put(ticker, new Position(pos.quantity(), pos.averageCost())));
+
+            portfolio.getAllShortPositions().forEach((ticker, pos) ->
+                    shortsBefore.put(ticker, new net.swofty.orders.Short(pos.quantity(), pos.entryPrice())));
+
+            double portfolioValueBefore = portfolio.getTotalValue(currentData);
+
             // Process algorithm decisions
             algo.onUpdate(currentData, timestamp, portfolio);
-            statistics.setTrades(portfolio.getTotalPositions());
+
+            // Compare states and record trades
+            detectAndRecordTrades(
+                    positionsBefore,
+                    shortsBefore,
+                    portfolio,
+                    statistics,
+                    portfolioValueBefore,
+                    timestamp,
+                    currentData
+            );
 
             // Update statistics with current portfolio value
             double portfolioValue = portfolio.getTotalValue(currentData);
@@ -290,5 +385,123 @@ public class StockBackTester {
 
             return sb.toString();
         }
+    }
+
+    private void detectAndRecordTrades(
+            Map<String, Position> positionsBefore,
+            Map<String, net.swofty.orders.Short> shortsBefore,
+            Portfolio currentPortfolio,
+            AlgorithmStatistics statistics,
+            double portfolioValueBefore,
+            LocalDateTime timestamp,
+            Map<String, MarketDataPoint> currentData) {
+
+        // Check for long position changes
+        currentPortfolio.getAllPositions().forEach((ticker, currentPos) -> {
+            Position previousPos = positionsBefore.get(ticker);
+            if (previousPos == null) {
+                // New long position
+                statistics.recordTrade(
+                        ticker,
+                        OrderType.BUY,
+                        currentPos.quantity(),
+                        currentPos.averageCost(),
+                        portfolioValueBefore,
+                        timestamp
+                );
+            } else {
+                int quantityDiff = currentPos.quantity() - previousPos.quantity();
+                if (quantityDiff > 0) {
+                    // Added to long position
+                    statistics.recordTrade(
+                            ticker,
+                            OrderType.BUY,
+                            quantityDiff,
+                            currentPos.averageCost(),
+                            portfolioValueBefore,
+                            timestamp
+                    );
+                } else if (quantityDiff < 0) {
+                    // Reduced long position
+                    statistics.recordTrade(
+                            ticker,
+                            OrderType.SELL,
+                            -quantityDiff,
+                            currentData.get(ticker).close(),
+                            portfolioValueBefore,
+                            timestamp
+                    );
+                }
+            }
+        });
+
+        // Check for closed long positions
+        positionsBefore.forEach((ticker, previousPos) -> {
+            if (!currentPortfolio.getAllPositions().containsKey(ticker)) {
+                // Position was closed
+                statistics.recordTrade(
+                        ticker,
+                        OrderType.SELL,
+                        previousPos.quantity(),
+                        currentData.get(ticker).close(),
+                        portfolioValueBefore,
+                        timestamp
+                );
+            }
+        });
+
+        // Check for short position changes
+        currentPortfolio.getAllShortPositions().forEach((ticker, currentShort) -> {
+            net.swofty.orders.Short previousShort = shortsBefore.get(ticker);
+            if (previousShort == null) {
+                // New short position
+                statistics.recordTrade(
+                        ticker,
+                        OrderType.SHORT,
+                        currentShort.quantity(),
+                        currentShort.entryPrice(),
+                        portfolioValueBefore,
+                        timestamp
+                );
+            } else {
+                int quantityDiff = currentShort.quantity() - previousShort.quantity();
+                if (quantityDiff > 0) {
+                    // Increased short position
+                    statistics.recordTrade(
+                            ticker,
+                            OrderType.SHORT,
+                            quantityDiff,
+                            currentShort.entryPrice(),
+                            portfolioValueBefore,
+                            timestamp
+                    );
+                } else if (quantityDiff < 0) {
+                    // Reduced short position
+                    statistics.recordTrade(
+                            ticker,
+                            OrderType.COVER,
+                            -quantityDiff,
+                            currentData.get(ticker).close(),
+                            portfolioValueBefore,
+                            timestamp
+                    );
+                }
+            }
+        });
+
+        // Check for closed short positions
+        shortsBefore.forEach((ticker, previousShort) -> {
+            if (!currentPortfolio.getAllShortPositions().containsKey(ticker)) {
+                // Short position was covered
+                statistics.recordTrade(
+                        ticker,
+                        OrderType.COVER,
+                        previousShort.quantity(),
+                        currentData.get(ticker).close(),
+                        portfolioValueBefore,
+                        timestamp
+                );
+            }
+        });
     }
 }

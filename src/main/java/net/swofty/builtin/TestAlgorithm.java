@@ -13,8 +13,6 @@ import java.util.Set;
 
 public class TestAlgorithm {
     public static void main(String[] args) {
-        AlphaVantageFetcher.setup("KEY", Path.of("PATH/StockMarketAlgorithmMaker/vantage-cache/"));
-
         // Create market service
         HistoricalMarketService marketService = new HistoricalMarketService(
                 new AlphaVantageProvider("KEY"),
@@ -36,6 +34,7 @@ public class TestAlgorithm {
                             .withInterval(Duration.ofMinutes(1))
                             .withRunOnMarketClosed(true)  // Enable running outside market hours
                             .withProvider(marketService)  // Use the initialized service
+                            .withAutomaticallySellOnFinish(true)
                             .withAlgorithm(new SimpleBuyAndHoldAlgorithm("simple-day-trader", tickers), 1_000_000)
                             .run()
                             .thenAccept(results -> {

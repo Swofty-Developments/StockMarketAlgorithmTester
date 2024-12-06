@@ -116,7 +116,7 @@ public class AlphaVantageProvider implements MarketDataProvider {
                 throw new MarketDataException("API Limit Reached: " + root.get("Note").asText(), null);
             }
         } catch (Exception e) {
-            throw new MarketDataException("Failed to validate response", e);
+            throw new MarketDataException("Failed to validate response, your ticker may be invalid", e);
         }
     }
 

@@ -105,6 +105,14 @@ public class Portfolio {
         marginAvailable += quantity * shortPosition.entryPrice() * MARGIN_REQUIREMENT;
     }
 
+    public Map<String, Position> getAllPositions() {
+        return positions;
+    }
+
+    public Map<String, net.swofty.orders.Short> getAllShortPositions() {
+        return shortPositions;
+    }
+
     // Stop order methods
     public void setStopLoss(String ticker, double stopPrice, int quantity) {
         totalPositions++;

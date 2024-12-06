@@ -108,6 +108,7 @@ public class HistoricalMarketService implements AutoCloseable {
                         if (cachedData != null) {
                             historicalCache.put(ticker, cachedData);
                             System.out.println("Loaded cached data for " + ticker);
+                            success = true;
                             continue;
                         }
                     }
@@ -120,6 +121,8 @@ public class HistoricalMarketService implements AutoCloseable {
                                         Set.of(ticker), start, end, marketConfig).get();
                                 historicalCache.put(ticker, data);
 
+                                long cooldown = (60 / provider.getRateLimit()) * 1000;
+
                                 // Save to cache if enabled
                                 if (cacheDirectory.isPresent()) {
                                     saveToCache(ticker, data, start, end);
@@ -129,7 +132,11 @@ public class HistoricalMarketService implements AutoCloseable {
                                 }
 
                                 success = true;
-                                Thread.sleep((60 / provider.getRateLimit()) * 1000);
+                                int amountOfTickersLeft = tickers.size() - attempts;
+                                if (amountOfTickersLeft > 0) {
+                                    System.out.println("Waiting " + cooldown + "ms due to rate limits");
+                                    Thread.sleep(cooldown);
+                                }
                             } else {
                                 throw new RuntimeException("Provider is not available");
                             }
