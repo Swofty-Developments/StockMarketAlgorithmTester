@@ -1,9 +1,9 @@
-package net.swofty.stockloopers;
+package net.swofty.stockmarkettester.stockloopers;
 
-import net.swofty.MarketConfig;
-import net.swofty.data.HistoricalMarketService;
-import net.swofty.data.MarketDataProvider;
-import net.swofty.user.Algorithm;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.data.HistoricalMarketService;
+import net.swofty.stockmarkettester.data.MarketDataProvider;
+import net.swofty.stockmarkettester.user.Algorithm;
 
 import java.time.Duration;
 import java.util.*;

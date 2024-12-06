@@ -1,4 +1,4 @@
-package net.swofty.exceptions;
+package net.swofty.stockmarkettester.exceptions;
 
 public class MarketDataException extends RuntimeException {
     public MarketDataException(String message) {

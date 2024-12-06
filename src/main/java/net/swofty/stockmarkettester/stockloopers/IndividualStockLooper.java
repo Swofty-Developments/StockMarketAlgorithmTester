@@ -1,8 +1,8 @@
-package net.swofty.stockloopers;
+package net.swofty.stockmarkettester.stockloopers;
 
-import net.swofty.MarketConfig;
-import net.swofty.data.HistoricalMarketService;
-import net.swofty.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.data.HistoricalMarketService;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;

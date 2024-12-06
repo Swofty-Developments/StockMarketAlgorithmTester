@@ -1,4 +1,4 @@
-package net.swofty.exceptions;
+package net.swofty.stockmarkettester.exceptions;
 
 public class InsufficientFundsException extends RuntimeException {
     public InsufficientFundsException(String message) {

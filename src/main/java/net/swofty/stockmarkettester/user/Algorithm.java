@@ -1,8 +1,8 @@
-package net.swofty.user;
+package net.swofty.stockmarkettester.user;
 
-import net.swofty.Portfolio;
-import net.swofty.orders.MarketDataPoint;
-import net.swofty.orders.Order;
+import net.swofty.stockmarkettester.Portfolio;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.orders.Order;
 
 import java.time.LocalDateTime;
 import java.util.List;

@@ -1,11 +1,11 @@
-package net.swofty.builtin;
+package net.swofty.stockmarkettester.builtin;
 
-import net.swofty.Portfolio;
-import net.swofty.fetchers.AlphaVantageFetcher;
-import net.swofty.orders.MarketDataPoint;
-import net.swofty.orders.Order;
-import net.swofty.orders.OrderType;
-import net.swofty.user.Algorithm;
+import net.swofty.stockmarkettester.Portfolio;
+import net.swofty.stockmarkettester.fetchers.AlphaVantageFetcher;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.orders.Order;
+import net.swofty.stockmarkettester.orders.OrderType;
+import net.swofty.stockmarkettester.user.Algorithm;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;

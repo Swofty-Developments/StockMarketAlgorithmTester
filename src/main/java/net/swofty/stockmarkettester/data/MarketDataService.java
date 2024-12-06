@@ -1,8 +1,8 @@
-package net.swofty.data;
+package net.swofty.stockmarkettester.data;
 
-import net.swofty.MarketConfig;
-import net.swofty.orders.HistoricalData;
-import net.swofty.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.orders.HistoricalData;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

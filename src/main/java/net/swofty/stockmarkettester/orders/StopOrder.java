@@ -1,4 +1,4 @@
-package net.swofty.orders;
+package net.swofty.stockmarkettester.orders;
 
 public record StopOrder(
         String ticker,

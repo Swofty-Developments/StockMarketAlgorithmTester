@@ -1,11 +1,11 @@
-package net.swofty.builtin;
+package net.swofty.stockmarkettester.builtin;
 
-import net.swofty.MarketConfig;
-import net.swofty.Portfolio;
-import net.swofty.stockloopers.BacktestBuilder;
-import net.swofty.data.HistoricalMarketService;
-import net.swofty.data.providers.AlphaVantageProvider;
-import net.swofty.fetchers.AlphaVantageFetcher;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.Portfolio;
+import net.swofty.stockmarkettester.stockloopers.BacktestBuilder;
+import net.swofty.stockmarkettester.data.HistoricalMarketService;
+import net.swofty.stockmarkettester.data.providers.AlphaVantageProvider;
+import net.swofty.stockmarkettester.fetchers.AlphaVantageFetcher;
 
 import java.nio.file.Path;
 import java.time.Duration;

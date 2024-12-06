@@ -1,4 +1,4 @@
-package net.swofty.fetchers;
+package net.swofty.stockmarkettester.fetchers;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

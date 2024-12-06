@@ -1,11 +1,8 @@
 package net.swofty.stockmarkettester;
 
 import lombok.Getter;
-import net.swofty.exceptions.InsufficientFundsException;
-import net.swofty.orders.MarketDataPoint;
-import net.swofty.orders.Option;
-import net.swofty.orders.OptionType;
-import net.swofty.orders.StopOrder;
+import net.swofty.stockmarkettester.exceptions.InsufficientFundsException;
+import net.swofty.stockmarkettester.orders.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,7 +16,7 @@ public class Portfolio {
     private final Map<String, Position> positions;
     private final Map<String, List<Option>> options;
     private final Map<String, List<StopOrder>> stopOrders;
-    private final Map<String, net.swofty.orders.Short> shortPositions;
+    private final Map<String, ShortOrder> shortPositions;
     private double cash;
     private double marginAvailable;
     private static final double MARGIN_REQUIREMENT = 0.5; // 50% margin requirement
@@ -77,7 +74,7 @@ public class Portfolio {
         }
 
         shortPositions.compute(ticker, (k, v) -> {
-            net.swofty.orders.Short currentShort = v == null ? new net.swofty.orders.Short(quantity, price) : v.addShares(quantity, price);
+            ShortOrder currentShort = v == null ? new ShortOrder(quantity, price) : v.addShares(quantity, price);
             marginAvailable -= marginRequired;
             cash += quantity * price; // Proceeds from short sale
             return currentShort;
@@ -87,7 +84,7 @@ public class Portfolio {
     public synchronized void coverShort(String ticker, int quantity, double price) {
         totalPositions++;
 
-        net.swofty.orders.Short shortPosition = shortPositions.get(ticker);
+        ShortOrder shortPosition = shortPositions.get(ticker);
         if (shortPosition == null || shortPosition.quantity() < quantity) {
             throw new IllegalStateException("No short position to cover");
         }
@@ -109,7 +106,7 @@ public class Portfolio {
         return positions;
     }
 
-    public Map<String, net.swofty.orders.Short> getAllShortPositions() {
+    public Map<String, ShortOrder> getAllShortPositions() {
         return shortPositions;
     }
 
@@ -201,7 +198,7 @@ public class Portfolio {
         return positions.get(ticker);
     }
 
-    public net.swofty.orders.Short getShortPosition(String ticker) {
+    public ShortOrder getShortPosition(String ticker) {
         return shortPositions.get(ticker);
     }
 

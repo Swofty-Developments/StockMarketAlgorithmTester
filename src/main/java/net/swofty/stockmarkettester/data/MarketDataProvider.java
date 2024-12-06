@@ -1,9 +1,9 @@
-package net.swofty.data;
+package net.swofty.stockmarkettester.data;
 
 import lombok.Getter;
 import lombok.NonNull;
-import net.swofty.MarketConfig;
-import net.swofty.orders.HistoricalData;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.orders.HistoricalData;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.LocalDateTime;

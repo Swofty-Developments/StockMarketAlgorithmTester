@@ -1,4 +1,4 @@
-package net.swofty.data;
+package net.swofty.stockmarkettester.data;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;

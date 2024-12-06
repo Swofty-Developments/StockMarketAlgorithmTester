@@ -1,4 +1,4 @@
-package net.swofty.orders;
+package net.swofty.stockmarkettester.orders;
 
 public enum OrderType {
     BUY,    // Open or add to long position

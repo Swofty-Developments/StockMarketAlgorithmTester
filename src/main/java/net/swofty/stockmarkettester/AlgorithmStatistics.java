@@ -1,6 +1,6 @@
 package net.swofty.stockmarkettester;
 
-import net.swofty.orders.OrderType;
+import net.swofty.stockmarkettester.orders.OrderType;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;

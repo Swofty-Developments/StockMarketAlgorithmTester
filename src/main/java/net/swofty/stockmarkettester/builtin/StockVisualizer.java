@@ -1,6 +1,6 @@
-package net.swofty.builtin;
+package net.swofty.stockmarkettester.builtin;
 
-import net.swofty.stockloopers.IndividualStockLooper;
+import net.swofty.stockmarkettester.stockloopers.IndividualStockLooper;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;

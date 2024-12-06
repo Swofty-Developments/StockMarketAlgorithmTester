@@ -1,4 +1,4 @@
-package net.swofty.orders;
+package net.swofty.stockmarkettester.orders;
 
 import java.io.Serial;
 import java.io.Serializable;

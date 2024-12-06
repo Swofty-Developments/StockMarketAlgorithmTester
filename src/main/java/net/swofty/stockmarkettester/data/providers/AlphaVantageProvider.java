@@ -1,13 +1,13 @@
-package net.swofty.data.providers;
+package net.swofty.stockmarkettester.data.providers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.swofty.MarketConfig;
-import net.swofty.data.MarketDataProvider;
-import net.swofty.data.MarketDataResponse;
-import net.swofty.data.RateLimiter;
-import net.swofty.orders.HistoricalData;
-import net.swofty.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.data.MarketDataProvider;
+import net.swofty.stockmarkettester.data.MarketDataResponse;
+import net.swofty.stockmarkettester.data.RateLimiter;
+import net.swofty.stockmarkettester.orders.HistoricalData;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
 
 import java.net.URI;
 import java.net.http.HttpClient;

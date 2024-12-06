@@ -1,10 +1,10 @@
-package net.swofty.data.providers;
+package net.swofty.stockmarkettester.data.providers;
 
-import net.swofty.MarketConfig;
-import net.swofty.data.MarketDataProvider;
-import net.swofty.data.MarketDataResponse;
-import net.swofty.orders.HistoricalData;
-import net.swofty.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.data.MarketDataProvider;
+import net.swofty.stockmarkettester.data.MarketDataResponse;
+import net.swofty.stockmarkettester.orders.HistoricalData;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
 
 import java.io.*;
 import java.net.URI;

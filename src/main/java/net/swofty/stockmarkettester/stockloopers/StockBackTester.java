@@ -1,14 +1,15 @@
-package net.swofty.stockloopers;
+package net.swofty.stockmarkettester.stockloopers;
 
-import net.swofty.AlgorithmStatistics;
-import net.swofty.MarketConfig;
-import net.swofty.Portfolio;
-import net.swofty.Position;
-import net.swofty.data.HistoricalMarketService;
-import net.swofty.orders.MarketDataPoint;
-import net.swofty.orders.Order;
-import net.swofty.orders.OrderType;
-import net.swofty.user.Algorithm;
+import net.swofty.stockmarkettester.AlgorithmStatistics;
+import net.swofty.stockmarkettester.MarketConfig;
+import net.swofty.stockmarkettester.Portfolio;
+import net.swofty.stockmarkettester.Position;
+import net.swofty.stockmarkettester.data.HistoricalMarketService;
+import net.swofty.stockmarkettester.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.orders.Order;
+import net.swofty.stockmarkettester.orders.OrderType;
+import net.swofty.stockmarkettester.orders.ShortOrder;
+import net.swofty.stockmarkettester.user.Algorithm;
 
 import javax.sound.sampled.Port;
 import java.time.*;
@@ -320,14 +321,14 @@ public class StockBackTester {
 
             // Capture portfolio state before update
             Map<String, Position> positionsBefore = new HashMap<>();
-            Map<String, net.swofty.orders.Short> shortsBefore = new HashMap<>();
+            Map<String, ShortOrder> shortsBefore = new HashMap<>();
 
             // Deep copy current positions
             portfolio.getAllPositions().forEach((ticker, pos) ->
                     positionsBefore.put(ticker, new Position(pos.quantity(), pos.averageCost())));
 
             portfolio.getAllShortPositions().forEach((ticker, pos) ->
-                    shortsBefore.put(ticker, new net.swofty.orders.Short(pos.quantity(), pos.entryPrice())));
+                    shortsBefore.put(ticker, new ShortOrder(pos.quantity(), pos.entryPrice())));
 
             double portfolioValueBefore = portfolio.getTotalValue(currentData);
 
@@ -389,7 +390,7 @@ public class StockBackTester {
 
     private void detectAndRecordTrades(
             Map<String, Position> positionsBefore,
-            Map<String, net.swofty.orders.Short> shortsBefore,
+            Map<String, ShortOrder> shortsBefore,
             Portfolio currentPortfolio,
             AlgorithmStatistics statistics,
             double portfolioValueBefore,
@@ -452,7 +453,7 @@ public class StockBackTester {
 
         // Check for short position changes
         currentPortfolio.getAllShortPositions().forEach((ticker, currentShort) -> {
-            net.swofty.orders.Short previousShort = shortsBefore.get(ticker);
+            ShortOrder previousShort = shortsBefore.get(ticker);
             if (previousShort == null) {
                 // New short position
                 statistics.recordTrade(

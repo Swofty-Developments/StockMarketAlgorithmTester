@@ -1,18 +1,18 @@
-package net.swofty.orders;
+package net.swofty.stockmarkettester.orders;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class Short {
+public class ShortOrder {
     private final AtomicInteger quantity;
     private final double entryPrice;
     private final DoubleAdder realizedPnL;
     private volatile LocalDateTime lastUpdateTime;
     private final ReentrantLock positionLock;
 
-    public Short(int initialQuantity, double entryPrice) {
+    public ShortOrder(int initialQuantity, double entryPrice) {
         this.quantity = new AtomicInteger(initialQuantity);
         this.entryPrice = entryPrice;
         this.realizedPnL = new DoubleAdder();
@@ -20,7 +20,7 @@ public class Short {
         this.positionLock = new ReentrantLock();
     }
 
-    public Short addShares(int additionalShares, double price) {
+    public ShortOrder addShares(int additionalShares, double price) {
         positionLock.lock();
         try {
             quantity.addAndGet(additionalShares);
@@ -31,7 +31,7 @@ public class Short {
         }
     }
 
-    public Short removeShares(int sharesToRemove) {
+    public ShortOrder removeShares(int sharesToRemove) {
         positionLock.lock();
         try {
             int currentQty = quantity.get();
