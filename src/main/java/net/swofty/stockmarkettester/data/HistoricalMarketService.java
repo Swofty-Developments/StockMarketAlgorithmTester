@@ -19,7 +19,10 @@ public class HistoricalMarketService implements AutoCloseable {
     private final Map<String, HistoricalData> historicalCache;
     @Getter
     private final MarketDataProvider provider;
+
     private final ExecutorService requestExecutor;
+    private final ExecutorService fetchExecutor;
+
     private final int maxRetries;
     private volatile boolean isInitialized = false;
     private final Object initLock = new Object();
@@ -30,6 +33,7 @@ public class HistoricalMarketService implements AutoCloseable {
         this.provider = provider;
         this.historicalCache = new ConcurrentHashMap<>();
         this.requestExecutor = Executors.newSingleThreadExecutor();
+        this.fetchExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         this.maxRetries = maxRetries;
         this.cacheDirectory = Optional.ofNullable(cacheDirectory);
 
@@ -166,28 +170,39 @@ public class HistoricalMarketService implements AutoCloseable {
             LocalDateTime start,
             LocalDateTime end) {
 
-        return CompletableFuture.supplyAsync(() -> {
-            if (!isInitialized) {
-                throw new IllegalStateException("HistoricalMarketService not initialized");
-            }
+        if (!isInitialized) {
+            throw new IllegalStateException("HistoricalMarketService not initialized");
+        }
 
-            Map<String, List<MarketDataPoint>> result = new ConcurrentHashMap<>();
+        Map<String, List<MarketDataPoint>> result = new ConcurrentHashMap<>();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
 
-            for (String ticker : tickers) {
-                HistoricalData cachedData = historicalCache.get(ticker);
-                if (cachedData == null && cacheDirectory.isPresent()) {
-                    // Try loading from file cache as fallback if caching is enabled
-                    cachedData = loadFromCache(ticker, start, end);
-                    if (cachedData == null) {
-                        throw new IllegalStateException("No cached data for ticker: " + ticker);
+        for (String ticker : tickers) {
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                try {
+                    HistoricalData cachedData = historicalCache.get(ticker);
+                    if (cachedData == null && cacheDirectory.isPresent()) {
+                        cachedData = loadFromCache(ticker, start, end);
+                        if (cachedData == null) {
+                            throw new IllegalStateException("No cached data for ticker: " + ticker);
+                        }
+                        historicalCache.put(ticker, cachedData);
                     }
-                    historicalCache.put(ticker, cachedData);
+                    if (cachedData != null) {
+                        result.put(ticker, cachedData.getDataPoints(start, end));
+                    } else {
+                        throw new IllegalStateException("No data available for ticker: " + ticker);
+                    }
+                } catch (Exception e) {
+                    throw new CompletionException(e);
                 }
-                result.put(ticker, cachedData.getDataPoints(start, end));
-            }
+            }, fetchExecutor);
 
-            return result;
-        });
+            futures.add(future);
+        }
+
+        return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> result);
     }
 
     public void clearCache() {
@@ -211,12 +226,17 @@ public class HistoricalMarketService implements AutoCloseable {
     @Override
     public void close() {
         requestExecutor.shutdown();
+        fetchExecutor.shutdown();
         try {
             if (!requestExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
                 requestExecutor.shutdownNow();
             }
+            if (!fetchExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                fetchExecutor.shutdownNow();
+            }
         } catch (InterruptedException e) {
             requestExecutor.shutdownNow();
+            fetchExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
     }

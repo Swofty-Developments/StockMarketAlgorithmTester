@@ -17,6 +17,7 @@ public class Portfolio {
     private final Map<String, List<Option>> options;
     private final Map<String, List<StopOrder>> stopOrders;
     private final Map<String, ShortOrder> shortPositions;
+    private final Map<String, Double> cachedValues;
     private double cash;
     private double marginAvailable;
     private static final double MARGIN_REQUIREMENT = 0.5; // 50% margin requirement
@@ -27,6 +28,7 @@ public class Portfolio {
         this.options = new ConcurrentHashMap<>();
         this.stopOrders = new ConcurrentHashMap<>();
         this.shortPositions = new ConcurrentHashMap<>();
+        this.cachedValues = new ConcurrentHashMap<>();
         this.cash = initialCash;
         this.marginAvailable = initialCash * 2; // 2x leverage
     }
@@ -159,9 +161,16 @@ public class Portfolio {
     }
 
     public double getTotalValue(Map<String, MarketDataPoint> currentPrices) {
+        positions.forEach((k, v) -> {
+            if (currentPrices.containsKey(k)) {
+                cachedValues.put(k, currentPrices.get(k).close());
+            }
+        });
+
         double longValue = positions.entrySet().stream()
                 .mapToDouble(entry -> {
                     MarketDataPoint price = currentPrices.get(entry.getKey());
+                    if (price == null) return cachedValues.get(entry.getKey());
                     return entry.getValue().quantity() * price.close();
                 })
                 .sum();
@@ -169,6 +178,7 @@ public class Portfolio {
         double shortValue = shortPositions.entrySet().stream()
                 .mapToDouble(entry -> {
                     MarketDataPoint price = currentPrices.get(entry.getKey());
+                    if (price == null) return cachedValues.get(entry.getKey());
                     return -entry.getValue().quantity() * price.close();
                 })
                 .sum();
