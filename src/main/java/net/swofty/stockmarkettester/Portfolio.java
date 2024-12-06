@@ -1,4 +1,4 @@
-package net.swofty;
+package net.swofty.stockmarkettester;
 
 import lombok.Getter;
 import net.swofty.exceptions.InsufficientFundsException;

@@ -1,4 +1,4 @@
-package net.swofty;
+package net.swofty.stockmarkettester;
 
 import java.time.LocalTime;
 import java.time.ZoneId;

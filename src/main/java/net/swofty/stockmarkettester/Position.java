@@ -1,4 +1,4 @@
-package net.swofty;
+package net.swofty.stockmarkettester;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
