@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import net.swofty.stockmarkettester.exceptions.MarketDataException;
 
 import java.io.*;
 import java.net.URI;
@@ -19,6 +20,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.Duration;
+import java.util.logging.Logger;
 
 public class AlphaVantageFetcher {
     private static String apiKey;
@@ -342,6 +344,11 @@ public class AlphaVantageFetcher {
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
                 JsonNode root = mapper.readTree(response.body());
                 List<NewsSentiment> sentiments = new ArrayList<>();
+
+                if (!root.has("feed")) {
+                    System.out.println(root);
+                    throw new MarketDataException("No data found in response", null);
+                }
 
                 JsonNode feed = root.get("feed");
                 for (JsonNode article : feed) {

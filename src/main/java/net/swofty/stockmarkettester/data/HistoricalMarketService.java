@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.swofty.stockmarkettester.MarketConfig;
 import net.swofty.stockmarkettester.orders.HistoricalData;
 import net.swofty.stockmarkettester.orders.MarketDataPoint;
+import net.swofty.stockmarkettester.data.cache.SegmentedHistoricalCache;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -16,9 +17,9 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class HistoricalMarketService implements AutoCloseable {
-    private final Map<String, HistoricalData> historicalCache;
     @Getter
     private final MarketDataProvider provider;
+    private final SegmentedHistoricalCache segmentedCache;
 
     private final ExecutorService requestExecutor;
     private final ExecutorService fetchExecutor;
@@ -31,11 +32,11 @@ public class HistoricalMarketService implements AutoCloseable {
 
     public HistoricalMarketService(MarketDataProvider provider, int maxRetries, Path cacheDirectory) {
         this.provider = provider;
-        this.historicalCache = new ConcurrentHashMap<>();
         this.requestExecutor = Executors.newSingleThreadExecutor();
         this.fetchExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         this.maxRetries = maxRetries;
         this.cacheDirectory = Optional.ofNullable(cacheDirectory);
+        this.segmentedCache = cacheDirectory != null ? new SegmentedHistoricalCache(cacheDirectory) : null;
 
         if (this.cacheDirectory.isPresent()) {
             try {
@@ -106,11 +107,10 @@ public class HistoricalMarketService implements AutoCloseable {
                     boolean success = false;
                     int attempts = 0;
 
-                    // Try to load from cache if caching is enabled
-                    if (cacheDirectory.isPresent()) {
-                        HistoricalData cachedData = loadFromCache(ticker, start, end);
-                        if (cachedData != null) {
-                            historicalCache.put(ticker, cachedData);
+                    // Try to load from segmented cache if enabled
+                    if (segmentedCache != null) {
+                        Optional<HistoricalData> cachedData = segmentedCache.get(ticker, start, end);
+                        if (cachedData.isPresent()) {
                             System.out.println("Loaded cached data for " + ticker);
                             success = true;
                             continue;
@@ -123,13 +123,12 @@ public class HistoricalMarketService implements AutoCloseable {
                                 System.out.println("Fetching historical data for " + ticker);
                                 HistoricalData data = provider.fetchHistoricalData(
                                         Set.of(ticker), start, end, marketConfig).get();
-                                historicalCache.put(ticker, data);
 
                                 long cooldown = (60 / provider.getRateLimit()) * 1000;
 
-                                // Save to cache if enabled
-                                if (cacheDirectory.isPresent()) {
-                                    saveToCache(ticker, data, start, end);
+                                // Save to segmented cache if enabled
+                                if (segmentedCache != null) {
+                                    segmentedCache.put(ticker, start, end, data);
                                     System.out.println("Successfully fetched and cached data for " + ticker);
                                 } else {
                                     System.out.println("Successfully fetched data for " + ticker);
@@ -180,18 +179,18 @@ public class HistoricalMarketService implements AutoCloseable {
         for (String ticker : tickers) {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
-                    HistoricalData cachedData = historicalCache.get(ticker);
-                    if (cachedData == null && cacheDirectory.isPresent()) {
-                        cachedData = loadFromCache(ticker, start, end);
-                        if (cachedData == null) {
-                            throw new IllegalStateException("No cached data for ticker: " + ticker);
+                    HistoricalData cachedData = null;
+                    if (segmentedCache != null) {
+                        Optional<HistoricalData> segmentedData = segmentedCache.get(ticker, start, end);
+                        if (segmentedData.isPresent()) {
+                            cachedData = segmentedData.get();
                         }
-                        historicalCache.put(ticker, cachedData);
                     }
+
                     if (cachedData != null) {
                         result.put(ticker, cachedData.getDataPoints(start, end));
                     } else {
-                        throw new IllegalStateException("No data available for ticker: " + ticker);
+                        throw new IllegalStateException("No cached data available for ticker: " + ticker);
                     }
                 } catch (Exception e) {
                     throw new CompletionException(e);
