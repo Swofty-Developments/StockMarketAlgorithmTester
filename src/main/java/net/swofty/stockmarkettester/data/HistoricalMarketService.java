@@ -4,7 +4,6 @@ import lombok.Getter;
 import net.swofty.stockmarkettester.MarketConfig;
 import net.swofty.stockmarkettester.orders.HistoricalData;
 import net.swofty.stockmarkettester.orders.MarketDataPoint;
-import net.swofty.stockmarkettester.data.cache.SegmentedHistoricalCache;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
